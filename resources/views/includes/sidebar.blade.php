@@ -41,6 +41,20 @@
         </div>
     </li>
 
+    <li class="nav-item">
+        <a class="nav-link" href="#" 
+        onclick="event.preventDefault(); document.getElementById('logout-form').submit()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </li>
+
+    <form method="POST" action="{{ route('logout') }}" id="logout-form">
+        @csrf
+    </form>
+
+
+    @if(auth()->user()->role == 'admin')
     <!-- Divider -->
     <hr class="sidebar-divider">
 
@@ -55,6 +69,7 @@
             <i class="fas fa-users"></i>
             <span>Manage Users</span></a>
     </li>
+    @endif
 
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">

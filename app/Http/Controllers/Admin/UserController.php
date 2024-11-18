@@ -14,8 +14,31 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
-        return view('admin.user_index', compact('users'));
+        $status = isset($_GET['status']) ? $_GET['status'] : null;
+        $search = isset($_GET['search']) ? $_GET['search'] : null;
+
+        $users = User::with('department');
+
+        if($search !== null && $search != ''){
+
+            $users->where(function($query) use ($search){
+                $query->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%')
+                    ->orWhereHas('department', function($query2) use ($search){
+                        $query2->where('name', 'like', '%'.$search.'%');
+                    });
+            });
+
+        }
+
+
+        if($status !== null && $status != ''){
+            $users->where('status', $status);
+        }
+
+        $users = $users->paginate(3);
+
+        return view('admin.user_index', compact('users', 'status', 'search'));
     }
 
     /**
@@ -53,6 +76,7 @@ class UserController extends Controller
 
         $user->name = $request['name'];
         $user->email = $request['email'];
+        $user->department_id = $request['department_id'];
         $user->password = bcrypt($request['password']);
         $user->status = $request['status'];
 
@@ -99,6 +123,7 @@ class UserController extends Controller
 
         $user->name = $request['name'];
         $user->email = $request['email'];
+        $user->department_id = $request['department_id'];
         if($request['password']){
             $user->password = bcrypt($request['password']);
         }

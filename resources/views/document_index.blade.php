@@ -1,9 +1,9 @@
 @extends('layouts.template')
 
 @section('header')
-<h1 class="h3 mb-0 text-gray-800">Manage Topics</h1>
-<a href="{{ route('topic.create') }}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-	<i class="fas fa-plus fa-sm text-white-50"></i> Add New Topic
+<h1 class="h3 mb-0 text-gray-800">Manage Documents for {{ $topic->name }}</h1>
+<a href="{{ route('document.create', $topic->id) }}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+	<i class="fas fa-plus fa-sm text-white-50"></i> Add New Document
 </a>
 @endsection
 
@@ -26,29 +26,31 @@
 				<th>Action</th>
 			</tr>
 			@php($i = 0)
-			@foreach($topics as $topic)
+			@foreach($documents as $document)
 			<tr>
 				<td>{{ ++$i }}</td>
-				<td>{{ $topic->name }}</td>
-				<td>{{ $topic->description }}</td>
 				<td>
-					@if($topic->status == 1)
+					{{ $document->name }}<br>
+					<a href="{{ asset($document->file) }}" target="_blank">
+						{{ $document->file }}
+					</a>
+				</td>
+				<td>{{ $document->description }}</td>
+				<td>
+					@if($document->status == 1)
 						Active
 					@else
 						Inactive
 					@endif
 				</td>
 				<td>
-					<form method="POST" action="{{ route('topic.destroy', $topic->id) }}" 
+					<form method="POST" action="{{ route('document.destroy', [$topic->id, $document->id]) }}" 
 						onsubmit="return confirm('Are you sure?');">
 						<input type="hidden" name="_method" value="DELETE">
 						@csrf
-						<a href="{{ route('topic.edit', $topic->id) }}" class="btn btn-primary btn-sm">Edit</a>
 						<button type="submit" class="btn btn-danger btn-sm">
 							Delete
 						</button>
-						<a href="{{ route('document.index', $topic->id) }}" class="btn btn-success btn-sm">Document</a>
-						<a href="{{ route('chat.index', $topic->id) }}" class="btn btn-info btn-sm">Chat</a>
 					</form>
 				</td>
 			</tr>

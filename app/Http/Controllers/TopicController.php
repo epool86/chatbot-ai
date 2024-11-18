@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 use App\Models\Topic;
 use App\Models\User;
+use App\Mail\NewTopicEmail;
+use App\Events\NewTopicEvent;
 
 class TopicController extends Controller
 {
@@ -14,7 +17,9 @@ class TopicController extends Controller
      */
     public function index()
     {
-        $topics = Topic::all();
+        $topics = Topic::all(); //all record except deleted
+        //$topics = Topic::withTrashed()->get(); //all record include trash
+        //$topics = Topic::onlyTrashed()->get(); //only trash
         return view('topic_index', compact('topics'));
     }
 
@@ -44,6 +49,13 @@ class TopicController extends Controller
         $topic->description = $request['description'];
         $topic->status = $request['status'];
         $topic->save();
+
+        //send email to user
+        Mail::to(auth()->user()->email)
+            ->queue(new NewTopicEmail($topic));
+
+        //send event signal to pusher
+        event(new NewTopicEvent($topic));
 
         return redirect()->route('topic.index')
                             ->with('message', 'Succesfully saved!');
@@ -92,8 +104,9 @@ class TopicController extends Controller
      */
     public function destroy(string $id)
     {
-        $topic = Topic::find($id);
+        $topic = Topic::withTrashed()->find($id);
         $topic->delete();
+        //$topic->forceDelete(); //hard delete
 
         return redirect()->route('topic.index')
                             ->with('message', 'Succesfully deleted!');

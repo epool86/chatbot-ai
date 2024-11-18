@@ -58,6 +58,21 @@ class="btn btn-sm btn-primary">
 			</div>
 
 			<div class="form-group">
+				<label>Department</label>
+				<select name="department_id" id="department_id" class="form-control bg-light">
+					@foreach(App\Models\Department::all() as $department)
+					<option value="{{ $department->id }}" 
+						@if(old('deparment_id', $user->department_id) == $department->id) selected @endif>
+						{{ $department->name }}
+					</option>
+					@endforeach
+				</select>
+				@error('department_id')
+					<span class="text-danger">{{ $message }}</span>
+				@enderror
+			</div>
+
+			<div class="form-group">
 				<label>Status</label>
 				<select name="status" id="status" class="form-control bg-light">
 					<option value="1" @if(old('status', $user->status) == 1) selected @endif>Active</option>
