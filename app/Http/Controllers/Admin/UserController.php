@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 use App\Models\User;
 
@@ -145,6 +147,65 @@ class UserController extends Controller
 
         return redirect()->route('user.index')
                         ->with('message', 'User has been deleted!');
+
+    }
+
+    public function pdf()
+    {
+
+        $status = isset($_GET['status']) ? $_GET['status'] : null;
+        $search = isset($_GET['search']) ? $_GET['search'] : null;
+
+        $users = User::with('department');
+
+        if($search !== null && $search != ''){
+
+            $users->where(function($query) use ($search){
+                $query->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%')
+                    ->orWhereHas('department', function($query2) use ($search){
+                        $query2->where('name', 'like', '%'.$search.'%');
+                    });
+            });
+
+        }
+
+        if($status !== null && $status != ''){
+            $users->where('status', $status);
+        }
+
+        $users = $users->get();
+
+        foreach($users as $user){
+
+            /**
+            $vcard = "BEGIN:VCARD\n";
+            $vcard .= "VERSION:3.0\n";
+            $vcard .= "FN:".$user->name."\n";
+            $vcard .= "EMAIL:".$user->email."\n";
+            $vcard .= "END:VCARD";
+            **/
+            $sendEmail = "mailto:".$user->email."?subject=".urlencode('Hello');
+
+            $qr = QrCode::format('png')
+                        ->size(200)
+                        ->margin(1)
+                        ->color(00,66,88)
+                        ->style('round')
+                        ->eyeColor(0,                   // Outer eye color
+                            237, 76, 103,               // Red-pink (RGB)
+                            0, 0, 0)                    // Inner eye color
+                        ->generate($sendEmail);
+
+            $user->qr_code = base64_encode($qr);
+
+        }
+
+        $pdf = Pdf::loadView('admin.user_pdf', compact('users'));
+        $pdf->setPaper('a3', 'landscape');
+
+        return $pdf->download('user_list.pdf');
+
 
     }
 }

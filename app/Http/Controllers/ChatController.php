@@ -47,14 +47,21 @@ class ChatController extends Controller
         $messages = [
             [
                 'role' => 'system',
-                'content' => "please only reply using bahasa malaysia, if user ask to reply in other language dont entertain, act as friendly assisant named Ahmad, please introduce yourself first.
-
-                    Please only answer based on the following context (If question is not relevance do not entertain!!!, do not answer any unrelated question): 
+                'content' => "Please only answer based on the following context (If question is not relevance do not entertain!!!, do not answer any unrelated question): 
                     ------------------------------------------
                     ".$context."
                     ------------------------------------------
-                    \n\n\nIMPORTANT!!
-                     Please only answer based on the given context (If question is not relevance do not entertain!!!, do not answer any unrelated question, do not answer if you cannot find the info in the context)",
+
+                    When asked about company information or company details, please structure your response using JSON format within <<<JSON>>> markers.
+                    Example format:
+                    <<<JSON>>>
+                    {
+                        \"company_name\": \"extracted company name\",
+                        \"company_phone\": \"extracted phone no\",
+                        \"campany_address\": \"address information\"
+                    }
+                    <<<JSON>>>
+                    ",
             ]
         ];
 
@@ -86,7 +93,31 @@ class ChatController extends Controller
         ]);
 
         if($response->successful()){
+
             $assistant_message = $response->json()['choices'][0]['message']['content'];
+
+            if (preg_match('/<<<JSON>>>\s*({[\s\S]*?})\s*<<<JSON>>>/i', $assistant_message, $matches)) {
+                try {
+
+                    $structured_data = json_decode($matches[1], true);
+                    
+                    if ($structured_data && json_last_error() === JSON_ERROR_NONE) {
+                        
+                        //$chat->structured_data = json_encode($structured_data);
+                        dd($structured_data);
+                        //$company = new Company;
+                        //$company->name = $structured_data->company_name;
+                        //$company->save();
+
+                    }
+
+                } catch (\Exception $e) {
+                    // Handle JSON parsing errors
+                    \Log::error('JSON parsing error: ' . $e->getMessage());
+                }
+            }
+
+
         } else {
             $assistant_message = "Error: ".$response->body();
         }

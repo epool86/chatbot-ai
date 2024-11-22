@@ -24,7 +24,9 @@
 					<option value="0" @if($status == '0') selected @endif>Inactive</option>
 				</select>
 
-				<button type="submit" class="btn btn-primary btn-sm">Submit</button>
+				<button type="submit" class="btn btn-primary btn-sm mr-2" style="white-space:nowrap;">Submit</button>
+
+				<a href="{{ route('user.pdf') }}" class="btn btn-dark btn-sm" style="white-space:nowrap;">Export PDF</a>
 
 			</form>
 		</div>
